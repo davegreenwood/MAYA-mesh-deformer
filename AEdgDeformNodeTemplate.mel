@@ -1,0 +1,53 @@
+// AE template - loaded as string in python file.
+global proc AEdgDeformNodeTemplate(string $nodeName) {
+    editorTemplate -beginScrollLayout;
+    editorTemplate -beginLayout "PTS File" -collapse 0;
+    editorTemplate -callCustom "dgDeformNodeFileLoad"
+                                    "dgDeformNodeFileRefresh" "ptsFile";
+    editorTemplate -endLayout;
+    AEdependNodeTemplate $nodeName;
+    editorTemplate -addExtraControls;
+    editorTemplate -endScrollLayout;
+}
+
+global proc dgDeformNodeFileLoad(string $attribute) {
+    setUITemplate -pst attributeEditorTemplate;
+    columnLayout -rowSpacing 4;
+    rowLayout -nc 3 -cw 2 210;
+
+    text -label "Points File:";
+    textField -editable 1 -text "" dgDeformNodeTxt0;
+    iconTextButton -i1 "navButtonBrowse.xpm"
+    -w 60 -h 20
+    -c ("dgDeformNodeFileBrowse(\"" + $attribute + "\");")
+    dgDeformNodeBtn0;
+
+    setParent ..;
+}
+
+global proc dgDeformNodeFileBrowse(string $attribute) {
+    string $result[] = `fileDialog2 -fm 1 -dialogStyle 2`;
+    if (size($result) > 0) {
+        setAttr $attribute -type "string" $result[0];
+    } else {
+        setAttr $attribute -type "string"
+            `textField -q -text dgDeformNodeTxt0`;
+    }
+    connectControl -fileName dgDeformNodeTxt0 $attribute;
+}
+
+global proc dgDeformNodeFileRefresh(string $attribute) {
+    string $fname = `getAttr $attribute`;
+    textField -edit -editable 1 -text $fname dgDeformNodeTxt0;
+    setAttr $attribute -type "string" $fname;
+}
+
+global proc dgdeform(){
+    string $sel[] = `ls -sl`;
+    if (size($sel) > 0) {
+        string $a[] = `deformer -typ dgDeformNode`;
+        connectAttr -f time1.outTime ($a[0] + ".time");
+    } else {
+    print "nothing selected";
+    }
+}
